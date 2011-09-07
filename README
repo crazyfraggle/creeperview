@@ -1,0 +1,54 @@
+= CreeperView = 
+
+An attempt at making a "live" isometric Minecraft map, displayed with a
+Google Maps interface.
+
+The view will be resembling the view used by pigmap 
+(see https://github.com/equalpants/pigmap).
+
+Benefits to pigmap:
+ - Almost live data.
+ - Rotating view?
+
+Cons:
+ - Requires service(s) running.
+ - Memory usage may be high, at least if using nginx+memcached to speed things
+   further.
+ - Disk usage will be high due to extensive caching of rendered data.
+
+Programming language:
+ - Initial version will probably be in Python.
+ - If Python version turns out to be too slow, rewrite all or critical parts
+   in C/C++.
+
+
+Request pipeline:
+ - Get tile request
+ - Figure out what chunks/regions are required.
+ - Check if said chunks/regions are updated since cached tile was created.
+  - NO: Return cached tile, job done.
+  - YES: Re-render updated chunks if updated since last chunk render.
+         Render tile.
+
+Pre-render tasks:
+ - Render block templates from terrain.png, fire.png.
+ - Initial render of all chunks as seperate command from live server. Will
+   take time.
+
+Thoughts on cachability
+ - Farther zoom levels: longer cache time.
+ - Closest zoom: Short cache time.
+ - Use nginx with memcached for instant updates of tile data. Avoids querying
+   the map generator unless a tile has expired.
+ - Zoom 1: (inner) caches 2 minutes.
+ - Zoom 8: (furthest?) caches 16 minutes? (Zoom x 2 minutes).
+
+Disk usage:
+ - Heavy disk usage anticipated.
+   - All rendered tiles stored on disk
+   - Prerendered chunks stored for faster tile creation. 
+     (each chunk is a 512x2544 pixel .png ~1MB of data, a server often has 
+     lots and lots of chunks...)
+   - Prerendered regions stored for faster tile creation on far zoomlevels.
+     (Stored at zoom level)
+
